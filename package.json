@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "description": "my real-time twitter visualization nodejs app",
   "dependencies": {
+    "jade": "*",
     "express": "4.10.2",
     "socket.io": "1.2.0",
      "mongodb": "~2.0",
