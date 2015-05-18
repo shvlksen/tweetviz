@@ -5,10 +5,10 @@ var twitter = require("ntwitter");
 
 
 var tw = new twitter({
-        consumer_key: "AkL9W1OqkERjJk77FepcyLv8V",
-        consumer_secret: "DxUiszCnjoAMbGAhbb9XcRKuK1HA6zps8zaqbSsblKfEkcokcG",
-        access_token_key: "49379185-ASGO2MBzRF9f9TLijmXCyxa8wTbSZZjIAdF9pw1pM",
-        access_token_secret: "AkIGdJMUvDuhBYnK6DffJA1nJF2gQDceJ1BzO8e8Hsdpu"
+        consumer_key: "IMPORTANT-NEEDED",
+        consumer_secret: "IMPORTANT-NEEDED",
+        access_token_key: "IMPORTANT-NEEDED",
+        access_token_secret: "IMPORTANT-NEEDED"
     }),
     stream = null;
     //track = "arsenal,chelsea, epl, gerrard, lampard",
@@ -83,7 +83,7 @@ db.open(function(err, db) {
             	}
 
 
-				db.collection('streamadams', function(err, collection) {
+				db.collection('tweetstream', function(err, collection) {
 					collection.insert( [{ 'tweet': data.text, 
 										'user': data.user.screen_name,
  										'timestamp': data.timestamp_ms, 
@@ -105,7 +105,7 @@ db.open(function(err, db) {
 
 	
 /*
-	var collection = db.collection('streamadams'); //streamadams is what I had named it originally
+	var collection = db.collection('tweetstream'); //tweetstream is what I had named it originally
 	
 	var num = collection.count();
 	console.log("number = " + num);
