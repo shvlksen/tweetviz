@@ -1,0 +1,21 @@
+body {
+   background-color: white; 
+   margin: 0 auto;
+   width: 75%;
+   font-family: Consolas, sans-serif;
+   font-size: 1.5em;
+   color: #454545;
+   font-weight: bold;
+   text-align: center;
+}
+
+svg {
+   stroke-width: 1.8px;
+   stroke: #CFCFCF;
+   fill: #F0F0F0;
+}
+
+circle {
+   fill: #FF8533;
+   stroke-width: 0px;
+}

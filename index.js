@@ -1,22 +1,54 @@
-var app = require('express')();
+var express = require('express');
+var path = require('path');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+
+
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var twitter = require("ntwitter");
 
 
+var routes = require('./routes/index');
+var users = require('./routes/users');
+
+var app = express();
+
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+/* not needed as we're using jade as the view engine
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/indesk.html');
+});*/
+
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+
+
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', routes);
+app.use('/users', users);
+
+
 var tw = new twitter({
-        consumer_key: "IMPORTANT-NEEDED",
-        consumer_secret: "IMPORTANT-NEEDED",
-        access_token_key: "IMPORTANT-NEEDED",
-        access_token_secret: "IMPORTANT-NEEDED"
+        consumer_key: "AkL9W1OqkERjJk77FepcyLv8V",
+        consumer_secret: "DxUiszCnjoAMbGAhbb9XcRKuK1HA6zps8zaqbSsblKfEkcokcG",
+        access_token_key: "49379185-ASGO2MBzRF9f9TLijmXCyxa8wTbSZZjIAdF9pw1pM",
+        access_token_secret: "AkIGdJMUvDuhBYnK6DffJA1nJF2gQDceJ1BzO8e8Hsdpu"
     }),
     stream = null;
     //track = "arsenal,chelsea, epl, gerrard, lampard",
     //users = [];
 
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
-});
 
 var latitude, longitude;
 
@@ -62,28 +94,46 @@ db.open(function(err, db) {
                 		console.log(data.place.bounding_box.coordinates);
                 	// Calculate the center of the bounding box for the tweet
 	                    var coord, _i, _len;
-	                    var centerLat = 0;
-	                    var centerLng = 0;
+	                    var centerLat = 0.0;
+	                    var centerLng = 0.0;
 
-	                    for (_i = 0, _len = coordinates.length; _i < _len; _i++) {
-	                      coord = coordinates[_i];
-	                      centerLat += coord[0];
-	                      centerLng += coord[1];
-	                    }
-                		centerLat = centerLat / coordinates.length;
-                		centerLng = centerLng / coordinates.length;
+	                    
+	                      coord = coordinates[0];
+	                    
+	                      console.log(coord + " is coord");
+	                    
+	                      console.log( !isNaN(parseFloat(coord[0]) ) ); //checking if they are indeed numbers
+
+	                      console.log("lat: "+coord[0][1] + " and long " + coord[1][0]);
+	                      console.log("lat: "+ coord[2][0]+" and long " + coord[1][1]);
+	                      console.log("lat: "+ coord[2][1]+" + and long " + coord[3][0]);
+	                      console.log("lat: "+coord[3][1] +" and long " +coord[0][0] );
+
+	                      
+	                      centerLat += coord[1][0] + coord[1][1] +coord[2][1] +coord[3][1];
+	                      centerLng += coord[0][1] + coord[2][0] +coord[3][0] +coord[0][0];
+	                      
+	                    
+	                      
+	                      
+	                      centerLat += centerLat/4;
+	                      console.log(centerLat + " is lat");
+	                      centerLng += centerLng/4;
+	                      console.log(centerLng + " is long");
+	                    
+                		
 
                 	// Build json object and broadcast it
                 	var outputPoint = {"lat": centerLat,"lng": centerLng};
                 	console.log("place is : " + outputPoint.lat + "and" + outputPoint.lng);
                 	longitude = outputPoint.lng, latitude = outputPoint.lat;
-                	//io.emit("chat message", outputPoint.lat + " and " + outputPoint.lng);
+                	//iso.emit("chat message", outputPoint.lat + " and " + outputPoint.lng);
 
               		}
             	}
 
 
-				db.collection('tweetstream', function(err, collection) {
+				db.collection('streamadams', function(err, collection) {
 					collection.insert( [{ 'tweet': data.text, 
 										'user': data.user.screen_name,
  										'timestamp': data.timestamp_ms, 
@@ -105,7 +155,7 @@ db.open(function(err, db) {
 
 	
 /*
-	var collection = db.collection('tweetstream'); //tweetstream is what I had named it originally
+	var collection = db.collection('streamadams'); //streamadams is what I had named it originally
 	
 	var num = collection.count();
 	console.log("number = " + num);
@@ -120,6 +170,37 @@ db.open(function(err, db) {
 
 });
 
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+// error handlers
+
+// development error handler
+// will print stacktrace
+if (app.get('env') === 'development') {
+  app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+      message: err.message,
+      error: err
+    });
+  });
+}
+
+// production error handler
+// no stacktraces leaked to user
+app.use(function(err, req, res, next) {
+  res.status(err.status || 500);
+  res.render('error', {
+    message: err.message,
+    error: {}
+  });
+});
 
 
 
@@ -196,6 +277,10 @@ io.on('connection', function(socket){
 //  	});
 });
 */
-http.listen(3000, function(){
+
+/*http.listen(3000, function(){
   console.log('listening on *:3000');
 });
+*/
+
+module.exports = app;
