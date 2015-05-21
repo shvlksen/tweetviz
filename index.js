@@ -1,9 +1,11 @@
+
 var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+var fs = require('fs'); //this is for filewriting
 
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -31,8 +33,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 
-
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
@@ -50,7 +50,7 @@ var tw = new twitter({
     //users = [];
 
 
-var latitude, longitude;
+var latitude, longitude; //to calculate and store the lat-long of each tweet
 
 var mongo = require('mongodb'); //for db
 
@@ -62,19 +62,61 @@ var Server = mongo.Server,
 
 var server = new Server('localhost', 27017, {auto_reconnect: true});
 var db = new Db('twitterstream', server);
+	
+
+var retrieve = setInterval( function() { retrv() }, 50000);
+
+function retrv() {
+
+db.open(function(err, db) {
+assert.equal(null,err);
+
+	var collection = db.collection('streamadams'); //streamadams is what I had named it originally
+	
+	var num = collection.count();
+	console.log("number = " + num);
+	
+	collection.find({}).toArray(function(err,docs) {
+		assert.equal(err,null);
+		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
+		console.log("Found the following records:");
+		console.dir(docs);
+		//setTimeout(break, 4000); //breaks after 4 seconds of printing
+	});
+	});
+
+
+}
+
+
+
+//adding timing function - the function should be executed every 5 seconds. 1000 ms = 1 s
+var tweeting = setInterval( function () { twiting() }, 5000);
+
+//function starts here 	
+function twiting() {
+	//console.log("inside function tweeting now"); 
+var d = new Date();
+console.log("the time is: " + d.toLocaleTimeString());
+
+
 
 db.open(function(err, db) {
 	assert.equal(null,err);
 
-	//commented it out because i dont want twitter stream and db retrieval running at the same time
+	/*//commented it out because i dont want twitter stream and db retrieval running at the same time
 	tw.stream(
 		'statuses/filter',
 		//{ track: ['word'] },
-		{ locations: ['-180,-90,180,90']},
+		{ locations: ['-180,-90,180,90'] },
+		// bounding box over NYC and SF - {'locations':'-122.75,36.8,-121.75,37.8,-74,40,-73,41'},
+
 		function(stream) {
+			
+
 			stream.on('data', function(data) {
 				console.log(data);
-
+				
 				//parsing the location from the tweet objects here
 				if (data.coordinates) {
 		    		console.log("has coordinates");
@@ -83,7 +125,8 @@ db.open(function(err, db) {
                   		var outputPoint = {"lat": data.coordinates.coordinates[0],"lng": data.coordinates.coordinates[1]};
                   		console.log("printing this: " + outputPoint.lat + " and" + outputPoint.lng);
 		    	  		//io.emit('chat message', outputPoint.lat + " and" + outputPoint.lng);
-		    	  		longitude = outputPoint.lng, latitude = outputPoint.lat;
+		    	  		longitude = outputPoint.lng;
+		    	  		latitude = outputPoint.lat;
                 	}
                 }
                 if(data.place){
@@ -132,7 +175,7 @@ db.open(function(err, db) {
               		}
             	}
 
-
+            	//inserting the captured tweets in the proper format
 				db.collection('streamadams', function(err, collection) {
 					collection.insert( [{ 'tweet': data.text, 
 										'user': data.user.screen_name,
@@ -145,31 +188,65 @@ db.open(function(err, db) {
 					 						//
 					 					}
 
+					 				);
+				}); //insertion code ends
 
-					 					);
-				});
+			}); //stream.on ends here
+
+			stream.on('destroy', function(response) {
+				console.log("Stream ended now");
 			});
-		}
-		);
-		//tw.stream block ends here
 
-	
-/*
+		//let the stream run for 9 seconds and then destroy it 	
+		setTimeout(stream.destroy, 9000);
+
+		} //function stream ends here
+
+		); //tw.stream ends here */
+
+
 	var collection = db.collection('streamadams'); //streamadams is what I had named it originally
 	
 	var num = collection.count();
 	console.log("number = " + num);
-	
-	collection.find({}).toArray(function(err,docs) {
+
+	var filepath = path.join(__dirname, "./helloworld.txt");
+	//Number(timestamp): { $gt: 1388534400 }
+
+	collection.find( {   } ).toArray(function(err,docs) {
 		assert.equal(err,null);
-		assert.equal(1809,docs.length); //1809 is the number of tweets it has randomly captured till now
+		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
 		console.log("Found the following records:");
-		console.dir(docs);
-	});//db retrieval code till here*/
+		//console.dir(docs);
+
+		docs.forEach( function(item) {
+			if(Number(item.timestamp) > 1388534400) {
+			
+			/*fs.writeFile(filepath, item.timestamp, function(err) {
+			if(err) return console.log(err);
+			console.log("check file helloworld.txt");
+			});*/
+
+				//jsonobj = 
+
+			var dt = new Date(Number(item.timestamp));
+			var d = dt.toLocaleTimeString();
+
+			//console.log(dt + " is that time");
 
 
-});
 
+			}
+		});
+		
+		//setTimeout(break, 4000); //breaks after 4 seconds of printing
+	});
+
+}); //db.open ends here //move this }); to after the next } if you wanna put the db open part outside the function tweeting scope
+
+}//tw.stream block  and function tweeting ends here */
+
+//db.close();	
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -204,83 +281,6 @@ app.use(function(err, req, res, next) {
 
 
 
-/*
-io.on('connection', function(socket){
-	console.log("user connected");
-  //dont need this for auto starting socket.on('chat message', function(msg){
 
-	console.log("chat messaging started");
-	  	
-		tw.stream('statuses/filter',
-				   { locations : '-122.75,36.8,-121.75,37.8,-74,40,-73,41' }, 
-				   //{ locations : ['-180','-90','180','90'] },
-				   //{ track: ['arsenal','chelsea', 'epl', 'gerrard', 'lampard'] }, 
-				   //{track : ['morning', 'night', 'life', 'happy']},
-		function(stream) {
-		  	stream.on('data', function (data) {
-		    	console.log(data);
-		    	//console.log(data.user);
-		    	//console.log(data.coordinates);
-		    	//io.emit('chat message', data.text);
-		    	
-
-		    	if (data.coordinates) {
-		    		console.log("has coordinates");
-                	if (data.coordinates !== null) {
-                  		//If so then build up some nice json and send out to web sockets
-                  		var outputPoint = {"lat": data.coordinates.coordinates[0],"lng": data.coordinates.coordinates[1]};
-                  		console.log("printing this: " + outputPoint.lat + " and" + outputPoint.lng);
-		    	  		io.emit('chat message', outputPoint.lat + " and" + outputPoint.lng);
-                	}
-                }
-                if(data.place){
-                	console.log("has place");
-                	if(data.place.bounding_box.type === 'Polygon'){
-                		console.log("has polygon");
-                		var coordinates = data.place.bounding_box.coordinates;
-                	// Calculate the center of the bounding box for the tweet
-	                    var coord, _i, _len;
-	                    var centerLat = 0;
-	                    var centerLng = 0;
-
-	                    for (_i = 0, _len = coordinates.length; _i < _len; _i++) {
-	                      coord = coordinates[_i];
-	                      centerLat += coord[0];
-	                      centerLng += coord[1];
-	                    }
-                		centerLat = centerLat / coordinates.length;
-                		centerLng = centerLng / coordinates.length;
-
-                	// Build json object and broadcast it
-                	var outputPoint = {"lat": centerLat,"lng": centerLng};
-                	console.log("place is : " + outputPoint.lat + "and" + outputPoint.lng);
-                	io.emit("chat message", outputPoint.lat + " and " + outputPoint.lng);
-
-              		}
-            	}*/
-
-/* only if need user location explicitly
-            	if(data.user.location) {
-            		console.log("has location");
-            		var outputPoint = data.user.location;
-                	console.log("location is : " + outputPoint);
-                	io.emit("chat message", outputPoint);
-	
-            	}*/
-            	
-
-/*
-		  	});
-		});
-
-	//io.emit('chat message', msg);
-//  	});
-});
-*/
-
-/*http.listen(3000, function(){
-  console.log('listening on *:3000');
-});
-*/
 
 module.exports = app;
