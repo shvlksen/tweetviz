@@ -66,11 +66,12 @@ locations.enter().append("svg:circle")
 //using mercator projection for the world map here:
 
 var width = 960,
-	height = 960;
+    height = 700;
+	
 
 var projection = d3.geo.mercator()
-	.scale((width + 1) / 2 / Math.PI)
-  .translate([width / 2, height / 2])
+	.scale( (width + 1) / 2 / Math.PI)
+  .translate([ width / 2, height / 2 ])
 	.precision(.1);
 
 var path = d3.geo.path()
@@ -120,14 +121,19 @@ d3.json("/javascripts/coordinates.json", function (error, items) {
   	.attr("cy", function(d) { 
   		var datum = [d.longitude,d.latitude];
   		
+      var lng = longconvert(d.longitude);
+
   		//console.log(projection(datum)[1] + " and " + projection(datum)[0]  );
   		
-  		return projection(datum)[1];
+  		//return ((projection(datum))[1]);
+      return (lng);
   	})
 
 	.attr("cx", function(d) { 
-		var datum = [d.longitude,d.latitude];
-		return projection(datum)[0];
+		//var datum = [d.longitude,d.latitude];
+    var lat = latconvert(d.latitude);
+		//return ((projection(datum))[0]);
+    return (lat);
 	})  
 
     .attr("id", function(d) { return d.user})
@@ -136,5 +142,44 @@ d3.json("/javascripts/coordinates.json", function (error, items) {
 
 
    });
+
+
+function longconvert( lng ) {
+
+var mapWidth    = width;
+var mapHeight   = height;
+
+//var x = ( lng + 180 );
+
+var x = ( lng + 180 ) * ( mapWidth / 360 );
+
+
+return (x);
+
+}
+
+
+
+function latconvert( lat ) {
+
+var mapWidth    = width;
+var mapHeight   = height;
+
+// convert from degrees to radians
+var latRad = lat * Math.PI/180;
+
+
+var mercN = ( Math.log ( Math.tan (( Math.PI / 4 )+( latRad / 2 ))) );
+
+var y = ( mapHeight / 2 ) - ( mapWidth * mercN / ( 2 * Math.PI ));
+
+
+return (y);
+
+}
+
+
+
+
 
 d3.select(self.frameElement).style("height", height + "px");

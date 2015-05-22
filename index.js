@@ -67,25 +67,53 @@ var server = new Server('localhost', 27017, {auto_reconnect: true});
 var db = new Db('twitterstream', server);
 	
 
-var retrieve = setInterval( function() { retrv() }, 50000);
+var retrieve = setInterval( function() { retrv() }, 10000);
 
 function retrv() {
+
+
+//timing calculations here:
+var d = new Date();
+/*console.log(" the time locally is: " + d.toLocaleTimeString());*/
+
+var temp = 5*60*1000; //5 mins in ms
+
+var tm = d.getTime() - temp; //convert into ms and subtract 5 minutes
+		
+console.log( " t: "+ d.getTime() + " and t-5 mins: " + tm);
+
+
 
 db.open(function(err, db) {
 assert.equal(null,err);
 
-	var collection = db.collection('streamtwit'); //streamadams is what I had named it originally
+	var collection = db.collection('streamtwit'); //streamtwit is the name
 	
-	var num = collection.count();
+	/*var num = collection.count();
 	console.log("number = " + num);
+*/
+
+	var filepath = path.join(__dirname, "./helloworld.txt");
 	
-	collection.find({}).toArray(function(err,docs) {
+
+	collection.find( {  longitude : { $exists: true }, latitude : { $exists: true }, timestamp : { $lt: tm }   } ).sort({ _id: -1 }).limit(500).toArray(function(err,docs) {
 		assert.equal(err,null);
+	
 		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
 		console.log("Found the following records:");
 		console.dir(docs);
-		//setTimeout(break, 4000); //breaks after 4 seconds of printing
-	});
+
+		coords = JSON.stringify(docs);
+
+		fs.writeFile(filepath, coords, function(err) {
+			if(err) return console.log(err);
+			console.log("written to file helloworld.txt");
+			});
+
+		//setTimeout(break, 4000); //breaks after 4 seconds of printing to give a 1 second gap
+	});//*/
+
+
 	});
 
 
@@ -93,21 +121,15 @@ assert.equal(null,err);
 
 
 
-//adding timing function - the function should be executed every 5 seconds. 1000 ms = 1 s
-var tweeting = setInterval( function () { twiting() }, 5000);
+//adding timing function - the function should be executed every 50 seconds. 1000 ms = 1 s
+var tweeting = setInterval( function () { twiting() }, 50000);
 
 //function starts here 	
 function twiting() {
 
-//timing calculations here:
 var d = new Date();
 console.log(" the time locally is: " + d.toLocaleTimeString());
 
-var temp = 5*60*1000; //5 mins in ms
-
-var tm = d.getTime() - temp; //convert into ms and subtract 5 minutes
-		
-console.log( " t: "+ d.getTime() + " and t-5 mins: " + tm);
 
 //database ops start:
 
@@ -131,10 +153,10 @@ db.open(function(err, db) {
 				if (data.coordinates) {
 		    		console.log("has coordinates");
                 	if (data.coordinates !== null) {
-                  		//If so then build up some nice json and send out to web sockets
+                  		
                   		var outputPoint = {"lat": data.coordinates.coordinates[0],"lng": data.coordinates.coordinates[1]};
                   		console.log("printing this: " + outputPoint.lat + " and" + outputPoint.lng);
-		    	  		//io.emit('chat message', outputPoint.lat + " and" + outputPoint.lng);
+		    	  		
 		    	  		longitude = outputPoint.lng;
 		    	  		latitude = outputPoint.lat;
                 	}
@@ -155,30 +177,32 @@ db.open(function(err, db) {
 	                    
 	                      console.log(coord + " is coord");
 	                    
-	                      console.log( !isNaN(parseFloat(coord[0]) ) ); //checking if they are indeed numbers
+	                      //console.log( !isNaN(parseFloat(coord[0]) ) ); //checking if they are indeed numbers
 
-	                      console.log("lat: "+coord[0][1] + " and long " + coord[1][0]);
-	                      console.log("lat: "+ coord[2][0]+" and long " + coord[1][1]);
-	                      console.log("lat: "+ coord[2][1]+" + and long " + coord[3][0]);
-	                      console.log("lat: "+coord[3][1] +" and long " +coord[0][0] );
+	                      /* checking the conversions
+	                      console.log("lat: "+ coord[1][0]  + " and long " + coord[0][1]);
+	                      console.log("lat: "+ coord[2][0] +" and long " +   coord[1][1]);
+	                      console.log("lat: "+ coord[3][0] +" + and long " + coord[2][1]);
+	                      console.log("lat: "+ coord[0][0]  +" and long " +  coord[3][1]);
+	                      */
 
 	                      
-	                      centerLat += coord[1][0] + coord[1][1] +coord[2][1] +coord[3][1];
-	                      centerLng += coord[0][1] + coord[2][0] +coord[3][0] +coord[0][0];
+	                      centerLat += coord[1][0] + coord[2][0] +coord[3][0] +coord[0][0];
+	                      centerLng += coord[0][1] + coord[2][1] +coord[3][1] +coord[1][1];
 	                      
 	                    
 	                      
 	                      
-	                      centerLat += centerLat/4;
+	                      centerLat = centerLat/4;
 	                      console.log(centerLat + " is lat");
-	                      centerLng += centerLng/4;
+	                      centerLng = centerLng/4;
 	                      console.log(centerLng + " is long");
 	                    
                 		
 
                 	// Build json object and broadcast it
                 	var outputPoint = {"lat": centerLat,"lng": centerLng};
-                	console.log("place is : " + outputPoint.lat + "and" + outputPoint.lng);
+                	//console.log("place is : " + outputPoint.lat + "and" + outputPoint.lng);
                 	longitude = outputPoint.lng, latitude = outputPoint.lat;
                 	//iso.emit("chat message", outputPoint.lat + " and " + outputPoint.lng);
 
@@ -215,52 +239,13 @@ db.open(function(err, db) {
 				console.log("Stream ended now");
 			});
 
-		//let the stream run for 4 seconds and then destroy it 	
-		setTimeout(stream.destroy, 4000);
+		//let the stream run for 40 seconds and then destroy it
+		setTimeout(stream.destroy, 40000);
 
 		} //function stream ends here
 
 		); //tw.stream ends here 
 
-/*
-	var collection = db.collection('streamtwit'); //streamtwit is what I had named it originally
-	
-	var num = collection.count();
-	console.log("number = " + num);
-
-	var filepath = path.join(__dirname, "./public/javascript/coordinates.json");
-	
-
-	collection.find( {  longitude : { $exists: true }, latitude : { $exists: true }   } ).sort({ _id: -1 }).limit(200).toArray(function(err,docs) {
-		assert.equal(err,null);
-	
-		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
-		//console.log("Found the following records:");
-		//console.dir(docs);
-
-		coords = JSON.stringify(docs);
-
-		fs.writeFile(filepath, coords, function(err) {
-			if(err) return console.log(err);
-			console.log("written to file coordinates.json");
-			});
-
-		
-		
-		/*docs.forEach( function(item) {
-			//checking for 5 min gap only
-			if(Number(item.timestamp) > tm) {
-			
-			
-			var dt = new Date(Number(item.timestamp));
-			var d = dt.toLocaleTimeString();
-
-			
-			}
-		});
-		
-		//setTimeout(break, 4000); //breaks after 4 seconds of printing
-	});*/
 
 }); //db.open ends here //move this }); to after the next } if you wanna put the db open part outside the function tweeting scope
 
