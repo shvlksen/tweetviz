@@ -74,7 +74,7 @@ function retrv() {
 db.open(function(err, db) {
 assert.equal(null,err);
 
-	var collection = db.collection('streamadams'); //streamadams is what I had named it originally
+	var collection = db.collection('streamtwit'); //streamadams is what I had named it originally
 	
 	var num = collection.count();
 	console.log("number = " + num);
@@ -98,24 +98,23 @@ var tweeting = setInterval( function () { twiting() }, 5000);
 
 //function starts here 	
 function twiting() {
-	//console.log("inside function tweeting now"); 
+
+//timing calculations here:
 var d = new Date();
-console.log("the time is: " + d.toLocaleTimeString());
+console.log(" the time locally is: " + d.toLocaleTimeString());
 
+var temp = 5*60*1000; //5 mins in ms
 
-var mins = d.getMinutes();
-console.log("the minutes diff is " + d.setMinutes(mins-5));
-var timecheck = valueOf(d.setMinutes(mins-5));
+var tm = d.getTime() - temp; //convert into ms and subtract 5 minutes
+		
+console.log( " t: "+ d.getTime() + " and t-5 mins: " + tm);
 
-		//console.log("the time now is: " + date);
-		console.log("t-5 mins: " + date.setMinutes(mins-5) + " and in milliseconds " + timecheck);
-
-
+//database ops start:
 
 db.open(function(err, db) {
 	assert.equal(null,err);
 
-	/*//comment it out if you dont want twitter stream and db retrieval running at the same time
+	//comment it out if you dont want twitter stream and db retrieval running at the same time
 	tw.stream(
 		'statuses/filter',
 		//{ track: ['word'] },
@@ -186,11 +185,19 @@ db.open(function(err, db) {
               		}
             	}
 
+            	/* for checking if the timestamps are actually getting converted to numbers or not
+            	if(Number(data.timestamp_ms) != NaN){
+            	console.log("timestamp numbered = " + Number(data.timestamp_ms) + " and type: " + typeof Number(data.timestamp_ms));
+            	}
+            	else{
+            		console.log("some error there");
+            		}*/
+
             	//inserting the captured tweets in the proper format
-				db.collection('streamadams', function(err, collection) {
+				db.collection('streamtwit', function(err, collection) {
 					collection.insert( [{ 'tweet': data.text, 
 										'user': data.user.screen_name,
- 										'timestamp': data.timestamp_ms, 
+ 										'timestamp': Number(data.timestamp_ms), 
 					 					'longitude': longitude,
 					 					'latitude': latitude, }],
 					 					function(err, result) {
@@ -208,59 +215,52 @@ db.open(function(err, db) {
 				console.log("Stream ended now");
 			});
 
-		//let the stream run for 9 seconds and then destroy it 	
-		setTimeout(stream.destroy, 9000);
+		//let the stream run for 4 seconds and then destroy it 	
+		setTimeout(stream.destroy, 4000);
 
 		} //function stream ends here
 
-		); //tw.stream ends here */
+		); //tw.stream ends here 
 
-
-	var collection = db.collection('streamadams'); //streamadams is what I had named it originally
+/*
+	var collection = db.collection('streamtwit'); //streamtwit is what I had named it originally
 	
 	var num = collection.count();
 	console.log("number = " + num);
 
-	//var filepath = path.join(__dirname, "./public/javascript/coordinates.json");
+	var filepath = path.join(__dirname, "./public/javascript/coordinates.json");
 	
 
 	collection.find( {  longitude : { $exists: true }, latitude : { $exists: true }   } ).sort({ _id: -1 }).limit(200).toArray(function(err,docs) {
 		assert.equal(err,null);
+	
 		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
 		//console.log("Found the following records:");
 		//console.dir(docs);
 
 		coords = JSON.stringify(docs);
 
-		/*fs.writeFile(filepath, coords, function(err) {
+		fs.writeFile(filepath, coords, function(err) {
 			if(err) return console.log(err);
 			console.log("written to file coordinates.json");
 			});
-*/
+
 		
 		
-		docs.forEach( function(item) {
-			if(Number(item.timestamp) > 1388534400) {
+		/*docs.forEach( function(item) {
+			//checking for 5 min gap only
+			if(Number(item.timestamp) > tm) {
 			
-			/*fs.writeFile(filepath, item.timestamp, function(err) {
-			if(err) return console.log(err);
-			console.log("check file helloworld.txt");
-			});*/
-
-		
-
+			
 			var dt = new Date(Number(item.timestamp));
 			var d = dt.toLocaleTimeString();
 
-			//console.log(dt + " is that time");
-
-
-
+			
 			}
 		});
 		
 		//setTimeout(break, 4000); //breaks after 4 seconds of printing
-	});
+	});*/
 
 }); //db.open ends here //move this }); to after the next } if you wanna put the db open part outside the function tweeting scope
 
