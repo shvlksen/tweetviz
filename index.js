@@ -50,6 +50,9 @@ var tw = new twitter({
     //users = [];
 
 
+var coords; //json object which will have all the coordinates and to be filled later on
+
+
 var latitude, longitude; //to calculate and store the lat-long of each tweet
 
 var mongo = require('mongodb'); //for db
@@ -213,11 +216,18 @@ db.open(function(err, db) {
 	var filepath = path.join(__dirname, "./helloworld.txt");
 	//Number(timestamp): { $gt: 1388534400 }
 
-	collection.find( {   } ).toArray(function(err,docs) {
+	collection.find( {  longitude : { $exists: true }, latitude : { $exists: true }   } ).sort({ _id: -1 }).limit(200).toArray(function(err,docs) {
 		assert.equal(err,null);
 		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
 		console.log("Found the following records:");
 		//console.dir(docs);
+
+		coords = JSON.stringify(docs);
+
+		fs.writeFile(filepath, coords, function(err) {
+			if(err) return console.log(err);
+			console.log("check file helloworld.txt");
+			});
 
 		docs.forEach( function(item) {
 			if(Number(item.timestamp) > 1388534400) {
@@ -227,7 +237,7 @@ db.open(function(err, db) {
 			console.log("check file helloworld.txt");
 			});*/
 
-				//jsonobj = 
+		
 
 			var dt = new Date(Number(item.timestamp));
 			var d = dt.toLocaleTimeString();

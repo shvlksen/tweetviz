@@ -1,3 +1,5 @@
+/*
+commented out because this is only for the usa 
 var width = 960,
     height = 500;
 
@@ -27,7 +29,7 @@ var locations = d3_map.append("svg:g")
 
 //var mapFeatures = usamap;
 
-/*// append JSON features to the svg as states
+///* append JSON features to the svg as states
 states.selectAll("path")
   .data(mapFeatures.features)
 .enter().append("path")
@@ -35,41 +37,118 @@ states.selectAll("path")
 
 // Note: if you are reading the JSON from a file, the code will look like this:
 
-d3.json("/javascripts/usamap.json", function (collection) {
+/*d3.json("/javascripts/usamap.json", function (collection) {
    states.selectAll("path")
      .data(collection.features)
      .enter().append("path")
      .attr("d", path); 
 });
+*/
+
+
+//using spherical mercator for the world:
+
+var width = 960,
+	height = 960;
+
+var projection = d3.geo.mercator()
+	.scale((width + 1) / 2 / Math.PI)
+	.translate([width / 2, height / 2])
+	.precision(.1);
+
+var path = d3.geo.path()
+	.projection(projection);
+
+var graticule = d3.geo.graticule();
+
+var svg = d3.select("body").append("svg")
+	.attr("width", width)
+	.attr("height", height);
+
+svg.append("path")
+	.datum(graticule)
+	.attr("class", "graticule")
+	.attr("d", path);
+
+
+// Create the SVG that state paths and location points will be attached to
+var d3_map = d3.select("body").append("svg:svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// Create a 'g' element within the SVG which state paths will be attached to
+var states = d3_map.append("svg:g")
+  .attr("class", "states");
+        
+var locations = d3_map.append("svg:g")
+  .attr("class", "locations");
+
+
+
+d3.json("/javascripts/worldmap.json", function(error, world) {
+	svg.insert("path", ".graticule")
+	.datum(topojson.feature(world, world.objects.land))
+	.attr("class", "land")
+	.attr("d", path);
+
+	svg.insert("path", ".graticule")
+	.datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+	.attr("class", "boundary")
+	.attr("d", path);
+});
+
+
+
+
 
 //getting the coordinates from the server
 //var coordinates = coord;
 
 //var coordinates;
 
+
 d3.json("/javascripts/coordinates.json", function (error, items) {
+   
+   
    
    if(error) return console.log(error + " - is the error");
 
-   var coordinates = items;
+   var coords = items;
 
 	var locations = d3.select(".locations").selectAll('circle')
-  .data(coordinates);
+  .data(coords);
+
+
 
 	locations.enter().append("svg:circle")
-    .attr("cy", function(d) { return projection(d.coordinates)[1];})
-	.attr("cx", function(d) { return projection(d.coordinates)[0];})
-    .attr("id", function(d) { return d.label})
+  	.attr("cy", function(d) { 
+  		var datum = [d.longitude,d.latitude];
+  		console.log(datum + " - is data");
+  		console.log(projection(datum)[1] + " and its partner " + projection(datum)[0]  );
+  		//console.log(projection(datum) + " is the projection");
+  		return (datum)[1];
+  	})
+
+	.attr("cx", function(d) { 
+		var datum = [d.longitude,d.latitude];
+		return (datum)[0];
+	})  
+
+    .attr("id", function(d) { return d.user})
     .attr("r", 4.5);
 
 
 
    });
 
+d3.select(self.frameElement).style("height", height + "px");
 
+//.attr("cy", function(d) { console.log(d.coordinates[1] + " ekh"); return projection(d.coordinates)[1];})
+	//.attr("cx", function(d) { console.log(d.coordinates[0] + "okh"); return projection(d.coordinates)[0];})
+//
 
-
-/*// map the coordinates
+/*
+// map the coordinates
 var locations = d3.select(".locations").selectAll('circle')
   .data(coordinates);
 
@@ -79,6 +158,6 @@ locations.enter().append("svg:circle")
     .attr("id", function(d) { return d.label})
     .attr("r", 4.5);
   */                                                        
-
+/*
 var temp = tmp.value;
-console.log("the number is:" + temp);
+console.log("the number is:" + temp);*/

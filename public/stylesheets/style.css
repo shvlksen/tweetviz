@@ -1,7 +1,7 @@
 body {
    background-color: white; 
    margin: 0 auto;
-   width: 75%;
+   width: 100%;
    font-family: Consolas, sans-serif;
    font-size: 1.5em;
    color: #454545;
@@ -19,3 +19,27 @@ circle {
    fill: #FF8533;
    stroke-width: 0px;
 }
+
+
+.graticule {
+   /* this is for the grid structure */
+   fill: none;
+   stroke: #777;
+   
+   stroke-opacity: .2;
+   stroke-width: .5px;
+}
+
+.land {
+   /* fill: #222; */
+   fill: #4477aa;
+
+}
+
+.boundary {
+   fill: none;
+   stroke: #444;
+   stroke-width: .5px;
+}
+
+
