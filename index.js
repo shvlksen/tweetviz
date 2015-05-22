@@ -103,11 +103,19 @@ var d = new Date();
 console.log("the time is: " + d.toLocaleTimeString());
 
 
+var mins = d.getMinutes();
+console.log("the minutes diff is " + d.setMinutes(mins-5));
+var timecheck = valueOf(d.setMinutes(mins-5));
+
+		//console.log("the time now is: " + date);
+		console.log("t-5 mins: " + date.setMinutes(mins-5) + " and in milliseconds " + timecheck);
+
+
 
 db.open(function(err, db) {
 	assert.equal(null,err);
 
-	/*//commented it out because i dont want twitter stream and db retrieval running at the same time
+	/*//comment it out if you dont want twitter stream and db retrieval running at the same time
 	tw.stream(
 		'statuses/filter',
 		//{ track: ['word'] },
@@ -213,22 +221,24 @@ db.open(function(err, db) {
 	var num = collection.count();
 	console.log("number = " + num);
 
-	var filepath = path.join(__dirname, "./helloworld.txt");
-	//Number(timestamp): { $gt: 1388534400 }
+	//var filepath = path.join(__dirname, "./public/javascript/coordinates.json");
+	
 
 	collection.find( {  longitude : { $exists: true }, latitude : { $exists: true }   } ).sort({ _id: -1 }).limit(200).toArray(function(err,docs) {
 		assert.equal(err,null);
 		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
-		console.log("Found the following records:");
+		//console.log("Found the following records:");
 		//console.dir(docs);
 
 		coords = JSON.stringify(docs);
 
-		fs.writeFile(filepath, coords, function(err) {
+		/*fs.writeFile(filepath, coords, function(err) {
 			if(err) return console.log(err);
-			console.log("check file helloworld.txt");
+			console.log("written to file coordinates.json");
 			});
-
+*/
+		
+		
 		docs.forEach( function(item) {
 			if(Number(item.timestamp) > 1388534400) {
 			
