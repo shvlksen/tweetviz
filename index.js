@@ -65,11 +65,11 @@ var Server = mongo.Server,
 
 var server = new Server('localhost', 27017, {auto_reconnect: true});
 var db = new Db('twitterstream', server);
-	
 
-var retrieve = setInterval( function() { retrv() }, 10000);
 
-function retrv() {
+//function for retrieving records from database at periodic interval and writing to json file
+
+(function retrv() {
 
 
 //timing calculations here:
@@ -93,10 +93,11 @@ assert.equal(null,err);
 	console.log("number = " + num);
 */
 
-	var filepath = path.join(__dirname, "./helloworld.txt");
+	var filepath = path.join(__dirname, "./public/javascripts/coordinates.json");
 	
 
-	collection.find( {  longitude : { $exists: true }, latitude : { $exists: true }, timestamp : { $lt: tm }   } ).sort({ _id: -1 }).limit(500).toArray(function(err,docs) {
+	//collection.find( {  longitude : { $exists: true }, latitude : { $exists: true }, timestamp : { $lt: tm }   } ).sort({ _id: -1 }).limit(500).toArray(function(err,docs) {
+	collection.find( {  longitude : { $exists: true, $gt: -90, $lt: 90 }, latitude : { $exists: true, $gt: -180, $lt: 180 }, timestamp : { $gt: tm }   } ).sort({ _id: -1 }).toArray(function(err,docs) {
 		assert.equal(err,null);
 	
 		//assert.equal(31132,docs.length); //31132 is the number of tweets it has randomly captured till now
@@ -107,25 +108,27 @@ assert.equal(null,err);
 
 		fs.writeFile(filepath, coords, function(err) {
 			if(err) return console.log(err);
-			console.log("written to file helloworld.txt");
+			console.log("written to file coordinates.json");
 			});
 
-		//setTimeout(break, 4000); //breaks after 4 seconds of printing to give a 1 second gap
+		setTimeout(retrv, 15000); //breaks after 15 seconds of printing and auto restarts
 	});//*/
 
 
 	});
 
 
-}
+})();
+
+//var retrieve = setInterval( function() { retrv() }, 10000); //dont need this as the function calls itself and has a timeout function too
 
 
 
-//adding timing function - the function should be executed every 50 seconds. 1000 ms = 1 s
-var tweeting = setInterval( function () { twiting() }, 50000);
+
+//with timing function - the function should be executed every 50 seconds. 1000 ms = 1 s
 
 //function starts here 	
-function twiting() {
+(function twiting() {
 
 var d = new Date();
 console.log(" the time locally is: " + d.toLocaleTimeString());
@@ -239,8 +242,8 @@ db.open(function(err, db) {
 				console.log("Stream ended now");
 			});
 
-		//let the stream run for 40 seconds and then destroy it
-		setTimeout(stream.destroy, 40000);
+		//let the stream run for 25 seconds and then destroy it
+		setTimeout(stream.destroy, 25000);
 
 		} //function stream ends here
 
@@ -249,9 +252,16 @@ db.open(function(err, db) {
 
 }); //db.open ends here //move this }); to after the next } if you wanna put the db open part outside the function tweeting scope
 
-}//tw.stream block  and function tweeting ends here */
+setTimeout(twiting, 50000); //the function auto restarts every 50 seconds. hence 25 seconds of stream and 25 secs of leeway.
+
+})();//function tweeting ends here and calls itself.
+
+
+
+//var tweeting = setInterval( function () { twiting() }, 50000); //dont need this as the function calls itself and has a timeout function too
 
 //db.close();	
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

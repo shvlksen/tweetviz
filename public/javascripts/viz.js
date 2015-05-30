@@ -1,109 +1,47 @@
-/*
-commented out because this is only for the usa map case
-
-var width = 960,
-    height = 500;
-
-//  Create a projection of the US
-var projection = d3.geo.albersUsa()
-    .scale(1000)
-    .translate([width/2, height/2]);
-
-var path = d3.geo.path().projection(projection);
-
-// Create the SVG that state paths and location points will be attached to
-var d3_map = d3.select("body").append("svg:svg")
-  .attr("width", width)
-  .attr("height", height);
-
-// Create a 'g' element within the SVG which state paths will be attached to
-var states = d3_map.append("svg:g")
-  .attr("class", "states");
-        
-var locations = d3_map.append("svg:g")
-  .attr("class", "locations");
-
-// Read the paths of the states from a JSON file
-// Attach the paths of the states to #states within the SVG
-
-// Note: normally this data would be read from a .json file
-
-//var mapFeatures = usamap;
-
-///* append JSON features to the svg as states
-states.selectAll("path")
-  .data(mapFeatures.features)
-.enter().append("path")
-  .attr("d", path); */
-
-// Note: if you are reading the JSON from a file, the code will look like this:
-
-/*d3.json("/javascripts/usamap.json", function (collection) {
-   states.selectAll("path")
-     .data(collection.features)
-     .enter().append("path")
-     .attr("d", path); 
-});
-
-
-//.attr("cy", function(d) { console.log(d.coordinates[1] + " -cy"); return projection(d.coordinates)[1];})
-  //.attr("cx", function(d) { console.log(d.coordinates[0] + "-cx"); return projection(d.coordinates)[0];})
-//
-
-/*
-// map the coordinates
-var locations = d3.select(".locations").selectAll('circle')
-  .data(coordinates);
-
-locations.enter().append("svg:circle")
-    .attr("cy", function(d) { return projection(d.coordinates)[1];})
-  .attr("cx", function(d) { return projection(d.coordinates)[0];})
-    .attr("id", function(d) { return d.label})
-    .attr("r", 4.5);
-  */                                                        
-
-
-//using mercator projection for the world map here:
 
 var width = 960,
     height = 700;
-	
 
+//using spherical mercator projection
 var projection = d3.geo.mercator()
-	.scale( (width + 1) / 2 / Math.PI)
+  .scale( (width + 1) / 2 / Math.PI)
   .translate([ width / 2, height / 2 ])
-	.precision(.1);
+  .precision(.1);
+
 
 var path = d3.geo.path()
-	.projection(projection);
+    .projection(projection);
 
 var graticule = d3.geo.graticule();
 
 var svg = d3.select("body").append("svg")
-	.attr("width", width)
-	.attr("height", height);
+    .attr("width", width)
+    .attr("height", height);
 
 svg.append("path")
-	.datum(graticule)
-	.attr("class", "graticule")
-	.attr("d", path);
-
-//adding a g layer on the svg which will host the locations    
-var locations = svg.append("svg:g")
-  .attr("class", "locations");
+    .datum(graticule)
+    .attr("class", "graticule")
+    .attr("d", path);
 
 d3.json("/javascripts/worldmap.json", function(error, world) {
-	svg.insert("path", ".graticule")
-	.datum(topojson.feature(world, world.objects.land))
-	.attr("class", "land")
-	.attr("d", path);
+  svg.insert("path", ".graticule")
+      .datum(topojson.feature(world, world.objects.land))
+      .attr("class", "land")
+      .attr("d", path);
 
-	svg.insert("path", ".graticule")
-	.datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
-	.attr("class", "boundary")
-	.attr("d", path);
+  svg.insert("path", ".graticule")
+      .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+      .attr("class", "boundary")
+      .attr("d", path);
 });
 
+
+//adding a 'g' layer on the svg which will group all the locations together
+
+var locations = svg.append("svg:g") //'svg' tells the 'g' is of svg namespacing.
+  .attr("class", "locations");
+
+(function mapping(){
 
 //getting the coordinates from the server, where the server writes to the json file
 
@@ -113,27 +51,29 @@ d3.json("/javascripts/coordinates.json", function (error, items) {
 
    var coords = items;
 
-	var locations = d3.select(".locations").selectAll('circle')
+	var locs = d3.select(".locations").selectAll('circle')
   .data(coords);
 
+  //twitter data set is reversed, so long and lat need to be reversed
 
-	locations.enter().append("svg:circle")
+	locs.enter().append("svg:circle")
   	.attr("cy", function(d) { 
-  		var datum = [d.longitude,d.latitude];
-  		
-      var lng = longconvert(d.longitude);
 
+  		var datum = [d.latitude,d.longitude];
+  		
+      
   		//console.log(projection(datum)[1] + " and " + projection(datum)[0]  );
   		
-  		//return ((projection(datum))[1]);
-      return (lng);
+  		return (projection(datum)[1]);
+      
   	})
 
 	.attr("cx", function(d) { 
-		//var datum = [d.longitude,d.latitude];
-    var lat = latconvert(d.latitude);
-		//return ((projection(datum))[0]);
-    return (lat);
+		var datum = [d.latitude,d.longitude];
+    
+    
+		return (projection(datum)[0]);
+    
 	})  
 
     .attr("id", function(d) { return d.user})
@@ -144,41 +84,8 @@ d3.json("/javascripts/coordinates.json", function (error, items) {
    });
 
 
-function longconvert( lng ) {
-
-var mapWidth    = width;
-var mapHeight   = height;
-
-//var x = ( lng + 180 );
-
-var x = ( lng + 180 ) * ( mapWidth / 360 );
-
-
-return (x);
-
-}
-
-
-
-function latconvert( lat ) {
-
-var mapWidth    = width;
-var mapHeight   = height;
-
-// convert from degrees to radians
-var latRad = lat * Math.PI/180;
-
-
-var mercN = ( Math.log ( Math.tan (( Math.PI / 4 )+( latRad / 2 ))) );
-
-var y = ( mapHeight / 2 ) - ( mapWidth * mercN / ( 2 * Math.PI ));
-
-
-return (y);
-
-}
-
-
+setTimeout(mapping, 30000); //restart it every 30 seconds
+})();
 
 
 
