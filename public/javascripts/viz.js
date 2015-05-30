@@ -51,8 +51,7 @@ d3.json("/javascripts/coordinates.json", function (error, items) {
 
    var coords = items;
 
-	var locs = d3.select(".locations").selectAll('circle')
-  .data(coords);
+	var locs = d3.select(".locations").selectAll('circle').data(coords);
 
   //twitter data set is reversed, so long and lat need to be reversed
 
@@ -77,7 +76,7 @@ d3.json("/javascripts/coordinates.json", function (error, items) {
 	})  
 
     .attr("id", function(d) { return d.user})
-    .attr("r", 4.5);
+    .attr("r", 3.5);
 
 
 

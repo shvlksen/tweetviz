@@ -16,11 +16,21 @@ svg {
 }
 
 circle {
-   fill: #FF8533;
-   stroke-width: 0px;
+   /* fill: #FF8533; bright orange */
+   fill: #eeff44;
+   stroke-width: 0.2px;
+   stroke: #d3d3d3;
    opacity: .3;
+
 }
 
+.locations :hover {
+opacity: 1; 
+stroke: #000;
+stroke-width: 0.5px;
+fill: #ffdd44;
+
+}
 
 .graticule {
    /* this is for the grid structure */
@@ -33,14 +43,15 @@ circle {
 
 .land {
    /* fill: #222; */
-   fill: #4477aa;
+   fill: #4477aa;  /*lightish blue */
+   
 
 }
 
 .boundary {
    fill: none;
    stroke: #444;
-   stroke-width: .5px;
+   stroke-width: .2px;
 }
 
 
